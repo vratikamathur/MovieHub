@@ -10,58 +10,15 @@ const _accent = Color(0xFFE50914);
 const _card = Color(0xFF1C1C26);
 
 const _movies = [
-  {
-    "title": "Inception",
-    "genre": "Sci-Fi",
-    "year": "2010",
-    "rating": "8.8",
-    "image": "https://image.tmdb.org/t/p/w500/8IB2e4r4oVhHnANbnm7O3Tj6tF8.jpg",
-  },
-  {
-    "title": "Interstellar",
-    "genre": "Sci-Fi",
-    "year": "2014",
-    "rating": "8.6",
-    "image": "https://image.tmdb.org/t/p/w500/rAiYTfKGqDCRIIqo664sY9XZIvQ.jpg",
-  },
-  {
-    "title": "Joker",
-    "genre": "Drama",
-    "year": "2019",
-    "rating": "8.4",
-    "image": "https://image.tmdb.org/t/p/w500/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg",
-  },
-  {
-    "title": "Avengers",
-    "genre": "Action",
-    "year": "2019",
-    "rating": "8.4",
-    "image": "https://image.tmdb.org/t/p/w500/RYMX2wcKCBAr24UyPD7xwmjaTn.jpg",
-  },
-  {
-    "title": "The Dark Knight",
-    "genre": "Action",
-    "year": "2008",
-    "rating": "9.0",
-    "image": "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-  },
-  {
-    "title": "Parasite",
-    "genre": "Thriller",
-    "year": "2019",
-    "rating": "8.5",
-    "image": "https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
-  },
+  {"title": "Inception", "genre": "Sci-Fi", "year": "2010", "rating": "8.8", "image": "https://image.tmdb.org/t/p/w500/8IB2e4r4oVhHnANbnm7O3Tj6tF8.jpg"},
+  {"title": "Interstellar", "genre": "Sci-Fi", "year": "2014", "rating": "8.6", "image": "https://image.tmdb.org/t/p/w500/rAiYTfKGqDCRIIqo664sY9XZIvQ.jpg"},
+  {"title": "Joker", "genre": "Drama", "year": "2019", "rating": "8.4", "image": "https://image.tmdb.org/t/p/w500/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg"},
+  {"title": "Avengers", "genre": "Action", "year": "2019", "rating": "8.4", "image": "https://image.tmdb.org/t/p/w500/RYMX2wcKCBAr24UyPD7xwmjaTn.jpg"},
+  {"title": "The Dark Knight", "genre": "Action", "year": "2008", "rating": "9.0", "image": "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg"},
+  {"title": "Parasite", "genre": "Thriller", "year": "2019", "rating": "8.5", "image": "https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg"},
 ];
 
 const _genres = ["All", "Action", "Sci-Fi", "Drama", "Thriller"];
-
-const _gridDelegate = SliverGridDelegateWithFixedCrossAxisCount(
-  crossAxisCount: 3,
-  childAspectRatio: 0.58,
-  crossAxisSpacing: 10,
-  mainAxisSpacing: 10,
-);
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -120,20 +77,11 @@ class _RootScreenState extends State<RootScreen> {
           elevation: 0,
           selectedItemColor: _accent,
           unselectedItemColor: Colors.white38,
-          selectedLabelStyle: GoogleFonts.inter(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-          ),
+          selectedLabelStyle: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600),
           unselectedLabelStyle: GoogleFonts.inter(fontSize: 11),
           items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_rounded),
-              label: "Home",
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.favorite_rounded),
-              label: "Favorites",
-            ),
+            BottomNavigationBarItem(icon: Icon(Icons.home_rounded), label: "Home"),
+            BottomNavigationBarItem(icon: Icon(Icons.favorite_rounded), label: "Favorites"),
           ],
         ),
       ),
@@ -150,17 +98,37 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   String _query = "";
   String _selectedGenre = "All";
+  final _pageController = PageController(viewportFraction: 0.88);
+  int _currentPage = 0;
+  late final AnimationController _titleAnim;
+  late final Animation<double> _titleFade;
+  late final Animation<Offset> _titleSlide;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleAnim = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
+    final curved = CurvedAnimation(parent: _titleAnim, curve: Curves.easeOut);
+    _titleFade = curved;
+    _titleSlide = Tween(begin: const Offset(0, 0.3), end: Offset.zero).animate(curved);
+    _titleAnim.forward();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    _titleAnim.dispose();
+    super.dispose();
+  }
 
   List<Map<String, String>> get _filtered => _movies
       .cast<Map<String, String>>()
-      .where(
-        (m) =>
-            (_selectedGenre == "All" || m["genre"] == _selectedGenre) &&
-            m["title"]!.toLowerCase().contains(_query.toLowerCase()),
-      )
+      .where((m) =>
+          (_selectedGenre == "All" || m["genre"] == _selectedGenre) &&
+          m["title"]!.toLowerCase().contains(_query.toLowerCase()))
       .toList();
 
   @override
@@ -173,29 +141,20 @@ class _HomeScreenState extends State<HomeScreen> {
           SliverToBoxAdapter(child: _buildSearchBar()),
           SliverToBoxAdapter(child: _buildGenreChips()),
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-              child: Text(
-                "Movies",
-                style: GoogleFonts.inter(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+            child: _HorizontalMovieList(
+              title: "Trending Now",
+              movies: _filtered,
+              isFav: widget.isFav,
+              onFavToggle: widget.onFavToggle,
             ),
           ),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            sliver: SliverGrid(
-              delegate: SliverChildBuilderDelegate(
-                (context, i) => _MovieCard(
-                  movie: _filtered[i],
-                  isFav: widget.isFav(_filtered[i]),
-                  onFavToggle: () => widget.onFavToggle(_filtered[i]),
-                ),
-                childCount: _filtered.length,
-              ),
-              gridDelegate: _gridDelegate,
+          SliverToBoxAdapter(
+            child: _HorizontalMovieList(
+              title: "Top Rated",
+              movies: _movies.cast<Map<String, String>>().toList()
+                ..sort((a, b) => b["rating"]!.compareTo(a["rating"]!)),
+              isFav: widget.isFav,
+              onFavToggle: widget.onFavToggle,
             ),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 24)),
@@ -213,17 +172,28 @@ class _HomeScreenState extends State<HomeScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                "MovieHub",
-                style: GoogleFonts.inter(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.5,
+              FadeTransition(
+                opacity: _titleFade,
+                child: SlideTransition(
+                  position: _titleSlide,
+                  child: RichText(
+                    text: TextSpan(children: [
+                      TextSpan(
+                        text: "Movie",
+                        style: GoogleFonts.inter(fontSize: 30, fontWeight: FontWeight.w800, letterSpacing: -1, color: Colors.white),
+                      ),
+                      TextSpan(
+                        text: "Hub",
+                        style: GoogleFonts.inter(fontSize: 30, fontWeight: FontWeight.w800, letterSpacing: -1, color: _accent),
+                      ),
+                    ]),
+                  ),
                 ),
               ),
-              Text(
-                "What are you watching tonight?",
-                style: GoogleFonts.inter(fontSize: 13, color: Colors.white38),
+              FadeTransition(
+                opacity: _titleFade,
+                child: Text("What are you watching tonight?",
+                    style: GoogleFonts.inter(fontSize: 13, color: Colors.white38)),
               ),
             ],
           ),
@@ -243,136 +213,107 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeroBanner() {
-    final hero = _movies.cast<Map<String, String>>().firstWhere(
-      (m) => m["title"] == "The Dark Knight",
-    );
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-      child: GestureDetector(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => DetailScreen(movie: hero, heroPrefix: "hero-"),
-          ),
-        ),
-        child: Hero(
-          tag: "hero-${hero["image"]}",
-          child: Container(
-            height: 230,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: _accent.withValues(alpha: 0.25),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  CachedNetworkImage(
-                    imageUrl: hero["image"]!,
-                    fit: BoxFit.cover,
-                    placeholder: (_, _) => Container(color: _card),
-                    errorWidget: (_, _, e) => Container(color: _card),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.black.withValues(alpha: 0.85),
-                          Colors.transparent,
-                          Colors.black.withValues(alpha: 0.3),
-                        ],
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                        stops: const [0.0, 0.5, 1.0],
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 12,
-                    left: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _accent,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        "FEATURED",
-                        style: GoogleFonts.inter(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 16,
-                    left: 16,
-                    right: 16,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+    final movies = _movies.cast<Map<String, String>>();
+    return Column(
+      children: [
+        const SizedBox(height: 20),
+        SizedBox(
+          height: 230,
+          child: PageView.builder(
+            controller: _pageController,
+            onPageChanged: (i) => setState(() => _currentPage = i),
+            itemCount: movies.length,
+            itemBuilder: (_, i) {
+              final movie = movies[i];
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: GestureDetector(
+                  onTap: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => DetailScreen(movie: movie))),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Stack(
+                      fit: StackFit.expand,
                       children: [
-                        Text(
-                          hero["title"]!,
-                          style: GoogleFonts.inter(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800,
+                        CachedNetworkImage(
+                          imageUrl: movie["image"]!,
+                          fit: BoxFit.cover,
+                          filterQuality: FilterQuality.high,
+                          placeholder: (_, _) => Container(color: _card),
+                          errorWidget: (_, _, e) => Container(color: _card),
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.black.withValues(alpha: 0.85),
+                                Colors.transparent,
+                                Colors.black.withValues(alpha: 0.3),
+                              ],
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                              stops: const [0.0, 0.5, 1.0],
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.star_rounded,
-                              color: Colors.amber,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              "${hero["rating"]}  •  ${hero["year"]}  •  ${hero["genre"]}",
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                color: Colors.white70,
-                              ),
-                            ),
-                          ],
+                        Positioned(
+                          top: 12, left: 12,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(color: _accent, borderRadius: BorderRadius.circular(6)),
+                            child: Text("FEATURED",
+                                style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1)),
+                          ),
                         ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            _bannerBtn(
-                              Icons.play_arrow_rounded,
-                              "Watch Now",
-                              filled: true,
-                            ),
-                            const SizedBox(width: 10),
-                            _bannerBtn(
-                              Icons.add_rounded,
-                              "Watchlist",
-                              filled: false,
-                            ),
-                          ],
+                        Positioned(
+                          bottom: 16, left: 16, right: 16,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(movie["title"]!,
+                                  style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.w800)),
+                              const SizedBox(height: 4),
+                              Row(children: [
+                                const Icon(Icons.star_rounded, color: Colors.amber, size: 14),
+                                const SizedBox(width: 4),
+                                Text("${movie["rating"]}  •  ${movie["year"]}  •  ${movie["genre"]}",
+                                    style: GoogleFonts.inter(fontSize: 11, color: Colors.white70)),
+                              ]),
+                              const SizedBox(height: 10),
+                              Row(children: [
+                                _bannerBtn(Icons.play_arrow_rounded, "Watch Now", filled: true),
+                                const SizedBox(width: 8),
+                                _bannerBtn(Icons.add_rounded, "Watchlist", filled: false),
+                              ]),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
-                ],
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(
+            movies.length,
+            (i) => AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              width: _currentPage == i ? 18 : 6,
+              height: 6,
+              decoration: BoxDecoration(
+                color: _currentPage == i ? _accent : Colors.white24,
+                borderRadius: BorderRadius.circular(3),
               ),
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 
@@ -384,20 +325,13 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(8),
         border: filled ? null : Border.all(color: Colors.white30),
       ),
-      child: Row(
-        children: [
-          Icon(icon, color: filled ? Colors.black : Colors.white, size: 18),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: filled ? Colors.black : Colors.white,
-            ),
-          ),
-        ],
-      ),
+      child: Row(children: [
+        Icon(icon, color: filled ? Colors.black : Colors.white, size: 18),
+        const SizedBox(width: 5),
+        Text(label,
+            style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600,
+                color: filled ? Colors.black : Colors.white)),
+      ]),
     );
   }
 
@@ -414,11 +348,7 @@ class _HomeScreenState extends State<HomeScreen> {
           onChanged: (v) => setState(() => _query = v),
           style: GoogleFonts.inter(fontSize: 14, color: Colors.white),
           decoration: InputDecoration(
-            prefixIcon: const Icon(
-              Icons.search_rounded,
-              color: Colors.white38,
-              size: 20,
-            ),
+            prefixIcon: const Icon(Icons.search_rounded, color: Colors.white38, size: 20),
             hintText: "Search movies...",
             hintStyle: GoogleFonts.inter(color: Colors.white38, fontSize: 14),
             border: InputBorder.none,
@@ -447,18 +377,13 @@ class _HomeScreenState extends State<HomeScreen> {
               decoration: BoxDecoration(
                 color: selected ? _accent : _surface,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: selected ? _accent : const Color(0xFF2A2A35),
-                ),
+                border: Border.all(color: selected ? _accent : const Color(0xFF2A2A35)),
               ),
-              child: Text(
-                _genres[i],
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                  color: selected ? Colors.white : Colors.white54,
-                ),
-              ),
+              child: Text(_genres[i],
+                  style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                      color: selected ? Colors.white : Colors.white54)),
             ),
           );
         },
@@ -467,31 +392,69 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _MovieCard extends StatelessWidget {
-  final Map<String, String> movie;
-  final bool isFav;
-  final VoidCallback onFavToggle;
-  const _MovieCard({
-    required this.movie,
+class _HorizontalMovieList extends StatelessWidget {
+  final String title;
+  final List<Map<String, String>> movies;
+  final bool Function(Map<String, String>) isFav;
+  final void Function(Map<String, String>) onFavToggle;
+
+  const _HorizontalMovieList({
+    required this.title,
+    required this.movies,
     required this.isFav,
     required this.onFavToggle,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => DetailScreen(movie: movie, heroPrefix: "card-"),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (title.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
+            child: Text(title,
+                style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700)),
+          ),
+        SizedBox(
+          height: 200,
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            scrollDirection: Axis.horizontal,
+            itemCount: movies.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemBuilder: (_, i) => SizedBox(
+              width: 120,
+              child: _MovieCard(
+                movie: movies[i],
+                isFav: isFav(movies[i]),
+                onFavToggle: () => onFavToggle(movies[i]),
+              ),
+            ),
+          ),
         ),
-      ),
+      ],
+    );
+  }
+}
+
+class _MovieCard extends StatelessWidget {
+  final Map<String, String> movie;
+  final bool isFav;
+  final VoidCallback onFavToggle;
+  const _MovieCard({required this.movie, required this.isFav, required this.onFavToggle});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.push(context,
+          MaterialPageRoute(builder: (_) => DetailScreen(movie: movie))),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: Hero(
-              tag: "card-${movie["image"]}",
+              tag: movie["title"]!,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(14),
                 child: Stack(
@@ -501,26 +464,16 @@ class _MovieCard extends StatelessWidget {
                       imageUrl: movie["image"]!,
                       fit: BoxFit.cover,
                       placeholder: (_, _) => Container(color: _card),
-                      errorWidget: (_, _, e) => Container(
-                        color: _card,
-                        child: const Icon(
-                          Icons.broken_image_rounded,
-                          color: Colors.white24,
-                        ),
-                      ),
+                      errorWidget: (_, _, e) => Container(color: _card,
+                          child: const Icon(Icons.broken_image_rounded, color: Colors.white24)),
                     ),
                     Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
+                      top: 0, left: 0, right: 0,
                       child: Container(
                         height: 60,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [
-                              Colors.black.withValues(alpha: 0.5),
-                              Colors.transparent,
-                            ],
+                            colors: [Colors.black.withValues(alpha: 0.5), Colors.transparent],
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                           ),
@@ -528,16 +481,13 @@ class _MovieCard extends StatelessWidget {
                       ),
                     ),
                     Positioned(
-                      top: 8,
-                      right: 8,
+                      top: 8, right: 8,
                       child: GestureDetector(
                         onTap: onFavToggle,
                         child: AnimatedSwitcher(
                           duration: const Duration(milliseconds: 250),
                           child: Icon(
-                            isFav
-                                ? Icons.favorite_rounded
-                                : Icons.favorite_border_rounded,
+                            isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
                             key: ValueKey(isFav),
                             color: isFav ? _accent : Colors.white70,
                             size: 22,
@@ -546,34 +496,19 @@ class _MovieCard extends StatelessWidget {
                       ),
                     ),
                     Positioned(
-                      bottom: 8,
-                      left: 8,
+                      bottom: 8, left: 8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 3,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.7),
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.star_rounded,
-                              color: Colors.amber,
-                              size: 12,
-                            ),
-                            const SizedBox(width: 3),
-                            Text(
-                              movie["rating"]!,
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
+                        child: Row(children: [
+                          const Icon(Icons.star_rounded, color: Colors.amber, size: 12),
+                          const SizedBox(width: 3),
+                          Text(movie["rating"]!,
+                              style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600)),
+                        ]),
                       ),
                     ),
                   ],
@@ -582,17 +517,11 @@ class _MovieCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            movie["title"]!,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
-          ),
+          Text(movie["title"]!, maxLines: 1, overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
           const SizedBox(height: 2),
-          Text(
-            "${movie["genre"]}  •  ${movie["year"]}",
-            style: GoogleFonts.inter(fontSize: 11, color: Colors.white38),
-          ),
+          Text("${movie["genre"]}  •  ${movie["year"]}",
+              style: GoogleFonts.inter(fontSize: 11, color: Colors.white38)),
         ],
       ),
     );
@@ -602,11 +531,7 @@ class _MovieCard extends StatelessWidget {
 class FavoritesScreen extends StatelessWidget {
   final List<Map<String, String>> favorites;
   final void Function(Map<String, String>) onFavToggle;
-  const FavoritesScreen({
-    super.key,
-    required this.favorites,
-    required this.onFavToggle,
-  });
+  const FavoritesScreen({super.key, required this.favorites, required this.onFavToggle});
 
   @override
   Widget build(BuildContext context) {
@@ -616,60 +541,30 @@ class FavoritesScreen extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
-                    Icons.favorite_border_rounded,
-                    size: 64,
-                    color: Colors.white12,
-                  ),
+                  const Icon(Icons.favorite_border_rounded, size: 64, color: Colors.white12),
                   const SizedBox(height: 16),
-                  Text(
-                    "No favorites yet",
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      color: Colors.white38,
-                    ),
-                  ),
+                  Text("No favorites yet",
+                      style: GoogleFonts.inter(fontSize: 16, color: Colors.white38)),
                   const SizedBox(height: 6),
-                  Text(
-                    "Tap ♥ on any movie to save it here",
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      color: Colors.white24,
-                    ),
-                  ),
+                  Text("Tap ♥ on any movie to save it here",
+                      style: GoogleFonts.inter(fontSize: 13, color: Colors.white24)),
                 ],
               ),
             )
-          : CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-                    child: Text(
-                      "Favorites",
-                      style: GoogleFonts.inter(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                  ),
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+                  child: Text("Favorites",
+                      style: GoogleFonts.inter(fontSize: 26, fontWeight: FontWeight.w800, letterSpacing: -0.5)),
                 ),
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  sliver: SliverGrid(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, i) => _MovieCard(
-                        movie: favorites[i],
-                        isFav: true,
-                        onFavToggle: () => onFavToggle(favorites[i]),
-                      ),
-                      childCount: favorites.length,
-                    ),
-                    gridDelegate: _gridDelegate,
-                  ),
+                _HorizontalMovieList(
+                  title: "",
+                  movies: favorites,
+                  isFav: (_) => true,
+                  onFavToggle: onFavToggle,
                 ),
-                const SliverToBoxAdapter(child: SizedBox(height: 24)),
               ],
             ),
     );
@@ -678,12 +573,7 @@ class FavoritesScreen extends StatelessWidget {
 
 class DetailScreen extends StatelessWidget {
   final Map<String, String> movie;
-  final String heroPrefix;
-  const DetailScreen({
-    super.key,
-    required this.movie,
-    required this.heroPrefix,
-  });
+  const DetailScreen({super.key, required this.movie});
 
   @override
   Widget build(BuildContext context) {
@@ -699,16 +589,13 @@ class DetailScreen extends StatelessWidget {
               onTap: () => Navigator.pop(context),
               child: Container(
                 margin: const EdgeInsets.all(8),
-                decoration: const BoxDecoration(
-                  color: Colors.black54,
-                  shape: BoxShape.circle,
-                ),
+                decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
                 child: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
               ),
             ),
             flexibleSpace: FlexibleSpaceBar(
               background: Hero(
-                tag: "$heroPrefix${movie["image"]}",
+                tag: movie["title"]!,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
@@ -743,107 +630,55 @@ class DetailScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: Text(
-                          movie["title"]!,
-                          style: GoogleFonts.inter(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
+                        child: Text(movie["title"]!,
+                            style: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.w800, letterSpacing: -0.5)),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
                           color: Colors.amber.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: Colors.amber.withValues(alpha: 0.4),
-                          ),
+                          border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
                         ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.star_rounded,
-                              color: Colors.amber,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              movie["rating"]!,
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.amber,
-                              ),
-                            ),
-                          ],
-                        ),
+                        child: Row(children: [
+                          const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
+                          const SizedBox(width: 4),
+                          Text(movie["rating"]!,
+                              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.amber)),
+                        ]),
                       ),
                     ],
                   ),
                   const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      _InfoChip(movie["genre"]!),
-                      const SizedBox(width: 8),
-                      _InfoChip(movie["year"]!),
-                      const SizedBox(width: 8),
-                      const _InfoChip("HD"),
-                    ],
-                  ),
+                  Row(children: [
+                    _InfoChip(movie["genre"]!),
+                    const SizedBox(width: 8),
+                    _InfoChip(movie["year"]!),
+                    const SizedBox(width: 8),
+                    const _InfoChip("HD"),
+                  ]),
                   const SizedBox(height: 20),
-                  Text(
-                    "About",
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  Text("About", style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 8),
                   Text(
                     "An immersive cinematic experience that pushes the boundaries of storytelling. "
                     "Featuring stunning visuals, a gripping narrative, and unforgettable performances.",
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      color: Colors.white60,
-                      height: 1.6,
-                    ),
+                    style: GoogleFonts.inter(fontSize: 14, color: Colors.white60, height: 1.6),
                   ),
                   const SizedBox(height: 28),
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFE50914), Color(0xFFB20710)],
-                      ),
+                      gradient: const LinearGradient(colors: [Color(0xFFE50914), Color(0xFFB20710)]),
                       borderRadius: BorderRadius.circular(14),
-                      boxShadow: [
-                        BoxShadow(
-                          color: _accent.withValues(alpha: 0.4),
-                          blurRadius: 16,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
+                      boxShadow: [BoxShadow(color: _accent.withValues(alpha: 0.4), blurRadius: 16, offset: const Offset(0, 6))],
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.play_arrow_rounded, size: 22),
-                        const SizedBox(width: 8),
-                        Text(
-                          "Watch Now",
-                          style: GoogleFonts.inter(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
+                    child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      const Icon(Icons.play_arrow_rounded, size: 22),
+                      const SizedBox(width: 8),
+                      Text("Watch Now", style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700)),
+                    ]),
                   ),
                   const SizedBox(height: 12),
                   Container(
@@ -854,25 +689,12 @@ class DetailScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: const Color(0xFF2A2A35)),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.play_circle_outline_rounded,
-                          size: 20,
-                          color: Colors.white70,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          "Watch Trailer",
-                          style: GoogleFonts.inter(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ],
-                    ),
+                    child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      const Icon(Icons.play_circle_outline_rounded, size: 20, color: Colors.white70),
+                      const SizedBox(width: 8),
+                      Text("Watch Trailer",
+                          style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white70)),
+                    ]),
                   ),
                 ],
               ),
@@ -897,14 +719,8 @@ class _InfoChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: const Color(0xFF2A2A35)),
       ),
-      child: Text(
-        label,
-        style: GoogleFonts.inter(
-          fontSize: 12,
-          color: Colors.white60,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
+      child: Text(label,
+          style: GoogleFonts.inter(fontSize: 12, color: Colors.white60, fontWeight: FontWeight.w500)),
     );
   }
 }
